@@ -8,5 +8,5 @@ wss.on('connection', function connection(ws) {
     ws.send('112233');
   });
 
-  ws.send('hello');
+  ws.send('websocket is ready');
 });
