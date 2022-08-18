@@ -1,41 +1,28 @@
-const WebSocketServer = require("ws").Server
-const http = require("http")
-const express = require("express")
-const app = express()
-const port = process.env.PORT || 5000
+const express = require('express');
+const app = express();
+const expressWs = require('express-ws')(app);
+const port = process.env.PORT || 5001;
 
-app.use(express.static(__dirname + "/"))
+app.use(express.static(__dirname + '/'));
 
-const server = http.createServer(app)
+app.ws('/', function(ws, req) {
+  console.log('socket', req.testing);
+  const id = setInterval(function() {
+    ws.send(JSON.stringify(new Date()));
+  }, 1000);
 
-server.listen(port)
+  console.log('websocket connection open');
 
-console.log("http server listening on %d", port)
+  ws.on('close', function() {
+    console.log('websocket connection close');
+    clearInterval(id);
+  });
+});
 
-var wss = new WebSocketServer({ server })
-console.log("websocket server created")
+app.ws('/to_upper_case', function(ws, req) {
+  ws.on('message', msg => {
+    ws.send(msg.toString().toUpperCase());
+  });
+});
 
-wss.on("connection", function (ws) {
-  var id = setInterval(function () {
-    ws.send(JSON.stringify(new Date()), function () { })
-  }, 1000)
-
-  console.log("websocket connection open")
-
-  ws.on("close", function () {
-    console.log("websocket connection close")
-    clearInterval(id)
-  })
-})
-
-const wss2 = new WebSocketServer({ server, path: "/to_upper_case" })
-
-console.log("to_upper_case websocket server created")
-
-wss2.on("connection", function (ws) {
-  ws.on('message', (msg) => {
-    if (typeof msg === 'string') {
-      ws.send(msg.toUpperCase())
-    }
-  })
-})
+app.listen(port);
